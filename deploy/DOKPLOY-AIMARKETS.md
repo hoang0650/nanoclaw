@@ -1,37 +1,67 @@
-# NanoClaw on AI Markets (aimarkets.vn)
+# NanoClaw on AI Markets via ProxVN
 
-## DNS (Mắt Bão)
+Public edge = **[ProxVN](https://proxvn.phgrouptechs.com/)** (`proxvn_tunnel_full`) — không cần Traefik `*.nanoclaw.aimarkets.vn` hay custom Node proxy làm mặc định.
 
-| Host | Type | Value |
-|------|------|-------|
-| `nanoclaw` | A | `72.62.72.165` |
-| `*.nanoclaw` | A | `72.62.72.165` |
+ProxVN cấp HTTPS subdomain (vd `https://abc123.bacsycay.click`) trỏ về process local. Landing/docs: https://proxvn.phgrouptechs.com/
 
-## Launch flow (Hermes-style)
+## Kiến trúc
 
-Marketplace `POST /v1/nanoclaw/launch` →
+```
+Buyer browser
+    → https://{sub}.bacsycay.click     (ProxVN server bạn đã host)
+    → tunnel → localhost:3100          (NanoClaw dashboard)
+```
 
-`https://{userId}.nanoclaw.aimarkets.vn/login?token=…&autoLogin=true&next=/dashboard?session=market-{userId}…`
+Tuỳ chọn Bearer login bridge: tunnel **port 3200** (aimarkets-proxy) thay vì 3100, rồi set `NANOCLAW_USE_LOGIN_PROXY=1` trên API.
 
-The **aimarkets-proxy** (`deploy/aimarkets-proxy`) sets an HttpOnly cookie and proxies `/dashboard` + `/api/*` to `@nanoco/nanoclaw-dashboard` with `Authorization: Bearer`.
+## Chạy tunnel (máy/VPS chạy NanoClaw)
 
-## Dokploy apps
+Server công cộng (hoặc self-host): xem [proxvn.phgrouptechs.com](https://proxvn.phgrouptechs.com/)
 
-1. **NanoClaw host** — run NanoClaw + dashboard (`DASHBOARD_PORT=3100`, `DASHBOARD_SECRET=<shared>`).
-2. **aimarkets-proxy** — image from `deploy/aimarkets-proxy`, port **3200**:
-   ```env
-   PORT=3200
-   DASHBOARD_UPSTREAM=http://<nanoclaw-dashboard-service>:3100
-   DASHBOARD_SECRET=<same shared secret>
-   ```
-3. Traefik file: `deploy/dokploy-dynamic-nanoclaw-aimarkets-wildcard.yml` → proxy `:3200`.
+```bash
+# Dashboard NanoClaw đang listen :3100
+proxvn --server 103.77.246.196:8882 --proto http 3100 --id nanoclaw-aimarkets --ui=false
+# → Public URL: https://<sub>.bacsycay.click
+```
+
+Ghi URL đó vào API:
+
+```env
+# Shared tunnel (một URL cho mọi buyer) — khuyến nghị lúc đầu
+NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://<sub>.bacsycay.click
+
+# Hoặc per-buyer nếu bạn reserve subdomain = Mongo userId trên ProxVN
+# NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.bacsycay.click
+```
 
 ## API env (`aimarketplace-api`)
 
 ```env
-NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn
+NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://<sub>.bacsycay.click
 NANOCLAW_SSH_HOST_TEMPLATE={userId}.nanoclaw.aimarkets.vn
+# Optional — chỉ khi dashboard bật DASHBOARD_SECRET
 NANOCLAW_DASHBOARD_SECRET=<same as DASHBOARD_SECRET>
+# Optional — tunnel aimarkets-proxy :3200 thay vì dashboard :3100
+# NANOCLAW_USE_LOGIN_PROXY=1
 ```
 
-Must match OpenClaw/Hermes pattern: Launch embeds the shared secret; wrong/missing secret → login 401.
+## Launch
+
+`POST /v1/nanoclaw/launch` →
+
+- Mặc định: `https://<proxvn>/dashboard?session=market-{userId}&audience=aimarkets…#token=…`
+- `NANOCLAW_USE_LOGIN_PROXY=1`: `…/login?token&autoLogin&next=/dashboard…`
+
+## aimarkets-proxy (tuỳ chọn)
+
+Thư mục `deploy/aimarkets-proxy` chỉ cần khi muốn cookie → `Authorization: Bearer`. Public vẫn qua ProxVN:
+
+```bash
+# proxy :3200 → dashboard :3100
+node deploy/aimarkets-proxy/server.js
+proxvn --proto http 3200 --id nanoclaw-login
+```
+
+## Traefik `*.nanoclaw.aimarkets.vn`
+
+Không bắt buộc nữa. File `dokploy-dynamic-nanoclaw-aimarkets-wildcard.yml` giữ cho ai vẫn muốn DNS Aimarkets thay vì ProxVN.

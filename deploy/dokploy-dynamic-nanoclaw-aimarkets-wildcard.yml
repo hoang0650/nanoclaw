@@ -1,9 +1,10 @@
+# Optional — only if NOT using ProxVN (https://proxvn.phgrouptechs.com/).
+# Preferred: expose NanoClaw via ProxVN HTTP tunnel (*.bacsycay.click), see DOKPLOY-AIMARKETS.md.
+#
 # Dokploy → Traefik File System → dynamic/nanoclaw-aimarkets-wildcard.yml
 #
 # DNS: nanoclaw + *.nanoclaw  A → 72.62.72.165
-# Upstream: aimarkets-proxy (login + Bearer bridge) → nanoclaw-dashboard :3100
-# Env on NanoClaw: DASHBOARD_SECRET (= NANOCLAW_DASHBOARD_SECRET on API)
-# Proxy listens :3200 (see nanoclaw/deploy/aimarkets-proxy)
+# Upstream: aimarkets-proxy :3200 OR dashboard :3100
 
 http:
   routers:
@@ -29,6 +30,5 @@ http:
     nanoclaw-aimarkets-svc:
       loadBalancer:
         servers:
-          # Replace with real Swarm/Dokploy service name after deploy
           - url: "http://aimarketplace-nanoclaw:3200"
         passHostHeader: true
