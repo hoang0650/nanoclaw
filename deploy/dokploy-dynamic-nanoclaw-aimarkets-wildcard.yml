@@ -1,0 +1,34 @@
+# Dokploy → Traefik File System → dynamic/nanoclaw-aimarkets-wildcard.yml
+#
+# DNS: nanoclaw + *.nanoclaw  A → 72.62.72.165
+# Upstream: aimarkets-proxy (login + Bearer bridge) → nanoclaw-dashboard :3100
+# Env on NanoClaw: DASHBOARD_SECRET (= NANOCLAW_DASHBOARD_SECRET on API)
+# Proxy listens :3200 (see nanoclaw/deploy/aimarkets-proxy)
+
+http:
+  routers:
+    nanoclaw-aimarkets-wildcard-https:
+      rule: "HostRegexp(`^[a-f0-9]{24}\\.nanoclaw\\.aimarkets\\.vn$`)"
+      entryPoints:
+        - websecure
+      service: nanoclaw-aimarkets-svc
+      tls:
+        certResolver: letsencrypt
+      priority: 50
+
+    nanoclaw-aimarkets-shared-https:
+      rule: "Host(`nanoclaw.aimarkets.vn`)"
+      entryPoints:
+        - websecure
+      service: nanoclaw-aimarkets-svc
+      tls:
+        certResolver: letsencrypt
+      priority: 200
+
+  services:
+    nanoclaw-aimarkets-svc:
+      loadBalancer:
+        servers:
+          # Replace with real Swarm/Dokploy service name after deploy
+          - url: "http://aimarketplace-nanoclaw:3200"
+        passHostHeader: true
