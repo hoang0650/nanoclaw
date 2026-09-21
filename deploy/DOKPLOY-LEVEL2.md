@@ -118,14 +118,35 @@ DASHBOARD_PORT=3100
 DASHBOARD_HOST=0.0.0.0
 DASHBOARD_SECRET=<cùng secret mức 1 / NANOCLAW_DASHBOARD_SECRET>
 NANOCLAW_INSTALL_ID=aimarkets
-# Skip OneCLI; pass model auth straight into agent containers
 NANOCLAW_GATEWAY_PROVIDER=none
-ANTHROPIC_API_KEY=sk-ant-…
-# TIMEZONE=Asia/Ho_Chi_Minh
+DEFAULT_AGENT_PROVIDER=opencode
+
+# --- Model: OpenRouter (mặc định Aimarkets) ---
+OPENCODE_PROVIDER=openrouter
+OPENCODE_MODEL=openrouter/anthropic/claude-sonnet-4
+OPENCODE_SMALL_MODEL=openrouter/anthropic/claude-haiku-4.5
+ANTHROPIC_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_API_KEY=sk-or-v1-…
+
+# --- Hoặc Featherless (đổi 4 dòng dưới, comment OpenRouter key/model) ---
+# OPENCODE_PROVIDER=featherless
+# OPENCODE_MODEL=featherless/<model-id>
+# OPENCODE_SMALL_MODEL=featherless/<model-id>
+# ANTHROPIC_BASE_URL=https://api.featherless.ai/v1
+# FEATHERLESS_API_KEY=…
 ```
 
-Không có `ANTHROPIC_API_KEY` (hoặc `CLAUDE_CODE_OAUTH_TOKEN`) → session tạo được nhưng container **stopped** (wake fail).  
-Muốn dùng OneCLI thay vì Anthropic trực tiếp: bỏ `NANOCLAW_GATEWAY_PROVIDER=none`, set `ONECLI_API_KEY=…`.
+NanoClaw **một group = một upstream** (không có fallback OpenRouter→Featherless như Hermes). Đổi provider bằng env + `ncl groups config update --provider opencode` + restart group.
+
+Keys được mount file vào session (không nhét `sk-…` vào Docker `-e`). Sau khi set env: Redeploy image có OpenCode, rồi:
+
+```bash
+docker exec <cid> node dist/cli/client.js groups config update \
+  --id ag-f6d60fd4-c148-4337-a247-f2fe9d83f79c --provider opencode
+docker exec <cid> node dist/cli/client.js groups restart \
+  --id ag-f6d60fd4-c148-4337-a247-f2fe9d83f79c
+```
+
 
 API marketplace **không đổi** template URL; chỉ cần secret khớp.
 

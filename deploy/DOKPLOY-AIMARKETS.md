@@ -16,6 +16,7 @@ Buyer browser
 
 - **Mức 1:** dashboard-only ([DOKPLOY.md](./DOKPLOY.md))
 - **Mức 2:** full host + Docker socket + pusher ([DOKPLOY-LEVEL2.md](./DOKPLOY-LEVEL2.md))
+- **Model:** OpenRouter / Featherless qua OpenCode ([AIMARKETS-OPENROUTER-FEATHERLESS.md](./AIMARKETS-OPENROUTER-FEATHERLESS.md))
 
 ## API env (`aimarketplace-api`)
 
