@@ -1,5 +1,5 @@
-# Optional — only if NOT using ProxVN (https://proxvn.phgrouptechs.com/).
-# Preferred: expose NanoClaw via ProxVN HTTP tunnel (*.bacsycay.click), see DOKPLOY-AIMARKETS.md.
+# Preferred: expose NanoClaw via https://proxvn.phgrouptechs.com (ProxVN), see DOKPLOY-AIMARKETS.md.
+# Optional Traefik path only if NOT using ProxVN host.
 #
 # Dokploy → Traefik File System → dynamic/nanoclaw-aimarkets-wildcard.yml
 #
