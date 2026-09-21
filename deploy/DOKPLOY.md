@@ -17,8 +17,12 @@ Buyer mở Launch → dashboard monitoring. Chưa chạy agent container.
 |--------|--------|
 | Source | GitHub `hoang0650/nanoclaw` · branch `main` |
 | Build type | **Dockerfile** |
-| Dockerfile path | `deploy/Dockerfile.dokploy` |
+| **Docker File** | `Dockerfile` (ở root repo) |
+| **Docker Context Path** | `/` (thư mục, **không** phải path tới file) |
 | Port | **3100** |
+
+> Lỗi `cd: can't cd to .../deploy/Dockerfile.dokploy` = bạn đã điền **Context Path** = file Dockerfile.  
+> Đúng: Context = `/`, Docker File = `Dockerfile` (hoặc `deploy/Dockerfile.dokploy`).
 
 ### 2. Environment
 
