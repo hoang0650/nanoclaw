@@ -107,7 +107,10 @@ Hoặc Compose: `deploy/docker-compose.aimarkets-level2.yml` (Dokploy Compose mo
 
 Dokploy UI → Volumes / Mounts. Sock thường là bind mount kiểu file.
 
-### 3. Environment
+### Tripwire (Docker image)
+
+Host từ chối boot nếu thiếu `data/upgrade-state.json` (xem `docs/upgrade-recovery.md`).  
+`aimarkets-level2-entrypoint.sh` **stamp marker** mỗi lần start (`via: aimarkets-level2`) — bắt buộc cho image không có `.git`.
 
 ```env
 NODE_ENV=production
