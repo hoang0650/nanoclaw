@@ -11,6 +11,11 @@
 # halves of setup name things consistently.
 
 _nanoclaw_install_slug() {
+  # Mirror src/install-slug.ts — NANOCLAW_INSTALL_ID overrides path hash.
+  if [ -n "${NANOCLAW_INSTALL_ID:-}" ]; then
+    printf '%s' "$NANOCLAW_INSTALL_ID"
+    return 0
+  fi
   local root="${NANOCLAW_PROJECT_ROOT:-${PROJECT_ROOT:-$PWD}}"
   if command -v shasum >/dev/null 2>&1; then
     printf '%s' "$root" | shasum | cut -c 1-8
