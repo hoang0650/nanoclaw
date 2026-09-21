@@ -2,6 +2,8 @@
 
 Public edge = **[https://proxvn.phgrouptechs.com](https://proxvn.phgrouptechs.com/)** (`proxvn_tunnel_full`) — không dùng `*.bacsycay.click`.
 
+**Deploy từng bước trên Dokploy:** xem **[DOKPLOY.md](./DOKPLOY.md)** (Dockerfile `deploy/Dockerfile.dokploy`, env, ProxVN, API).
+
 ## Kiến trúc
 
 ```
