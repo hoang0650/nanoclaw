@@ -1,8 +1,9 @@
 # Deploy NanoClaw trên Dokploy (AI Markets)
 
 Dokploy: `deploy.phgrouptechs.com` · VPS `72.62.72.165`  
-Public Launch: **https://nanoclaw.aimarkets.vn** · Wildcard: **`*.nanoclaw.aimarkets.vn`**  
-Không dùng `*.tunnel.phgrouptechs.com` / `*.bacsycay.click`.
+Public Launch: **`https://{userId}.nanoclaw.aimarkets.vn`** (giống Hermes/OpenClaw)  
+Apex: `nanoclaw.aimarkets.vn` · Wildcard DNS: `*.nanoclaw`  
+Không dùng `*.tunnel.phgrouptechs.com` / ProxVN làm Launch host.
 
 Có **2 mức** deploy. Aimarkets Launch chỉ cần **mức 1**.
 
@@ -55,21 +56,21 @@ python3 openclaw/deploy/_apply-aimarkets-user-certs.py <userId>
 ### 4. API marketplace
 
 ```env
-NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://nanoclaw.aimarkets.vn
+NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn
 NANOCLAW_DASHBOARD_SECRET=<cùng DASHBOARD_SECRET ở trên>
 NANOCLAW_SSH_HOST_TEMPLATE={userId}.nanoclaw.aimarkets.vn
 ```
 
 Redeploy API + web. Launch mở:
 
-`https://nanoclaw.aimarkets.vn/dashboard?session=market-{userId}…`
+`https://{userId}.nanoclaw.aimarkets.vn/dashboard?session=market-{userId}…`
 
 ### 5. Kiểm tra
 
 ```bash
 curl -sI https://nanoclaw.aimarkets.vn/dashboard
 curl -s -H "Authorization: Bearer $DASHBOARD_SECRET" https://nanoclaw.aimarkets.vn/api/overview
-curl -sI https://test.nanoclaw.aimarkets.vn/dashboard
+curl -sI https://6a69f224e6032a3f00de977f.nanoclaw.aimarkets.vn/dashboard
 ```
 
 ---
@@ -99,7 +100,7 @@ Chỉ khi cần `/login?token&autoLogin` → cookie Bearer:
 
 1. [x] Dokploy NanoClaw · port 3100 · `DASHBOARD_SECRET`  
 2. [x] Traefik `nanoclaw.aimarkets.vn` + `*.nanoclaw.aimarkets.vn` → `:3100`  
-3. [x] API `NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://nanoclaw.aimarkets.vn`  
+3. [x] API `NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn`  
 4. [ ] Launch Nano Claw trên marketplace  
 
 Chi tiết: [DOKPLOY-AIMARKETS.md](./DOKPLOY-AIMARKETS.md).
