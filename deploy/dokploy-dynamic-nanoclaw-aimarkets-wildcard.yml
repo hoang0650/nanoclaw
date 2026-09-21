@@ -1,34 +1,51 @@
-# Preferred: expose NanoClaw via https://proxvn.phgrouptechs.com (ProxVN), see DOKPLOY-AIMARKETS.md.
-# Optional Traefik path only if NOT using ProxVN host.
-#
-# Dokploy → Traefik File System → dynamic/nanoclaw-aimarkets-wildcard.yml
-#
-# DNS: nanoclaw + *.nanoclaw  A → 72.62.72.165
-# Upstream: aimarkets-proxy :3200 OR dashboard :3100
+# Dokploy → dynamic/nanoclaw-aimarkets-wildcard.yml
+# DNS: nanoclaw + *.nanoclaw A → 72.62.72.165
+# TLS pattern = same as ai.aimarkets.vn (denglish): web+websecure, LE HTTP-01
+# Tenant hosts: {userId}.nanoclaw.aimarkets.vn (24-hex MongoId)
 
 http:
   routers:
-    nanoclaw-aimarkets-wildcard-https:
-      rule: "HostRegexp(`^[a-f0-9]{24}\\.nanoclaw\\.aimarkets\\.vn$`)"
+    nanoclaw-aimarkets-shared-http:
+      rule: "Host(`nanoclaw.aimarkets.vn`)"
       entryPoints:
-        - websecure
+        - web
+      middlewares:
+        - redirect-to-https
       service: nanoclaw-aimarkets-svc
-      tls:
-        certResolver: letsencrypt
-      priority: 50
+      priority: 200
 
     nanoclaw-aimarkets-shared-https:
       rule: "Host(`nanoclaw.aimarkets.vn`)"
       entryPoints:
         - websecure
       service: nanoclaw-aimarkets-svc
+      priority: 200
       tls:
         certResolver: letsencrypt
-      priority: 200
+        domains:
+          - main: "nanoclaw.aimarkets.vn"
+
+    nanoclaw-aimarkets-tenant-http:
+      rule: "HostRegexp(`^[a-f0-9]{24}\\.nanoclaw\\.aimarkets\\.vn$`)"
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+      service: nanoclaw-aimarkets-svc
+      priority: 50
+
+    nanoclaw-aimarkets-tenant-https:
+      rule: "HostRegexp(`^[a-f0-9]{24}\\.nanoclaw\\.aimarkets\\.vn$`)"
+      entryPoints:
+        - websecure
+      service: nanoclaw-aimarkets-svc
+      priority: 50
+      tls:
+        certResolver: letsencrypt
 
   services:
     nanoclaw-aimarkets-svc:
       loadBalancer:
         servers:
-          - url: "http://aimarketplace-nanoclaw:3200"
+          - url: "http://aimarketplace-nanoclaw-hsnvyh:3100"
         passHostHeader: true
