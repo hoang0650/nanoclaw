@@ -117,10 +117,15 @@ NODE_ENV=production
 DASHBOARD_PORT=3100
 DASHBOARD_HOST=0.0.0.0
 DASHBOARD_SECRET=<cùng secret mức 1 / NANOCLAW_DASHBOARD_SECRET>
-# Optional providers / channels theo docs NanoClaw
-# ANTHROPIC_API_KEY=…
+NANOCLAW_INSTALL_ID=aimarkets
+# Skip OneCLI; pass model auth straight into agent containers
+NANOCLAW_GATEWAY_PROVIDER=none
+ANTHROPIC_API_KEY=sk-ant-…
 # TIMEZONE=Asia/Ho_Chi_Minh
 ```
+
+Không có `ANTHROPIC_API_KEY` (hoặc `CLAUDE_CODE_OAUTH_TOKEN`) → session tạo được nhưng container **stopped** (wake fail).  
+Muốn dùng OneCLI thay vì Anthropic trực tiếp: bỏ `NANOCLAW_GATEWAY_PROVIDER=none`, set `ONECLI_API_KEY=…`.
 
 API marketplace **không đổi** template URL; chỉ cần secret khớp.
 
