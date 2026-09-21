@@ -14,6 +14,9 @@ Buyer browser
     → Traefik → aimarketplace-nanoclaw:3100
 ```
 
+- **Mức 1:** dashboard-only ([DOKPLOY.md](./DOKPLOY.md))
+- **Mức 2:** full host + Docker socket + pusher ([DOKPLOY-LEVEL2.md](./DOKPLOY-LEVEL2.md))
+
 ## API env (`aimarketplace-api`)
 
 ```env

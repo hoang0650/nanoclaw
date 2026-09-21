@@ -1,0 +1,23 @@
+# Aimarkets NanoClaw mức 2 — full host + Docker socket + persistent data.
+# Dokploy: Compose mode, or mirror mounts/env onto Dockerfile.level2 app.
+# Docs: deploy/DOKPLOY-LEVEL2.md
+
+services:
+  nanoclaw:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.level2
+    ports:
+      - "3100:3100"
+    environment:
+      NODE_ENV: production
+      DASHBOARD_PORT: "3100"
+      DASHBOARD_HOST: "0.0.0.0"
+      DASHBOARD_SECRET: ${DASHBOARD_SECRET:?set DASHBOARD_SECRET}
+    volumes:
+      - nanoclaw-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  nanoclaw-data:

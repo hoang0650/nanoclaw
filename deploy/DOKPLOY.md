@@ -5,7 +5,7 @@ Public Launch: **`https://{userId}.nanoclaw.aimarkets.vn`** (giống Hermes/Open
 Apex: `nanoclaw.aimarkets.vn` · Wildcard DNS: `*.nanoclaw`  
 Không dùng `*.tunnel.phgrouptechs.com` / ProxVN làm Launch host.
 
-Có **2 mức** deploy. Aimarkets Launch chỉ cần **mức 1**.
+Có **2 mức** deploy: **mức 1** (dashboard-only) đang chạy Launch; **mức 2** (host + Docker) khi cần agent thật — xem [DOKPLOY-LEVEL2.md](./DOKPLOY-LEVEL2.md).
 
 ---
 
@@ -84,11 +84,17 @@ NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn
 
 ## Mức 2 — Full NanoClaw host (agent + Docker)
 
-Xem skill / docs upstream NanoClaw. Aimarkets Launch mức 1 đủ cho marketplace.
+Launch vẫn mở `{userId}.nanoclaw.aimarkets.vn`, nhưng process là **full host** + **docker.sock** + **dashboard pusher** → Overview/Sessions có agent thật.
 
-Wire dashboard pusher theo skill `add-dashboard` nếu cần agent live feed.
+Chi tiết deploy, sock mount, agent image, phase 2b/2c: **[DOKPLOY-LEVEL2.md](./DOKPLOY-LEVEL2.md)**
 
-**Lưu ý:** nested Docker trên Swarm/Dokploy đôi khi bị chặn; ưu tiên mức 1 trước.
+| | Mức 1 | Mức 2 |
+|--|--|--|
+| Docker File | `Dockerfile` | `deploy/Dockerfile.level2` |
+| Entrypoint | dashboard + seed | `node dist/index.js` |
+| Mount | data (optional) | **docker.sock** + `/app/data` |
+
+**Lưu ý:** sock = quyền Docker trên host; Swarm/Dokploy có thể chặn — nếu fail, giữ mức 1.
 
 ---
 
@@ -108,6 +114,7 @@ Chỉ khi cần `/login?token&autoLogin` → cookie Bearer:
 1. [x] Dokploy NanoClaw · port 3100 · `DASHBOARD_SECRET`  
 2. [x] Traefik `nanoclaw.aimarkets.vn` + `*.nanoclaw.aimarkets.vn` → `:3100`  
 3. [x] API `NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn`  
-4. [ ] Launch Nano Claw trên marketplace  
+4. [ ] Launch Nano Claw trên marketplace (mức 1 OK)  
+5. [ ] Mức 2 (optional): [DOKPLOY-LEVEL2.md](./DOKPLOY-LEVEL2.md) — sock + `Dockerfile.level2`  
 
 Chi tiết: [DOKPLOY-AIMARKETS.md](./DOKPLOY-AIMARKETS.md).
