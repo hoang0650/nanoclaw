@@ -69,8 +69,15 @@ Redeploy API + web. Launch mở:
 
 ```bash
 curl -sI https://nanoclaw.aimarkets.vn/dashboard
-curl -s -H "Authorization: Bearer $DASHBOARD_SECRET" https://nanoclaw.aimarkets.vn/api/overview
-curl -sI https://6a69f224e6032a3f00de977f.nanoclaw.aimarkets.vn/dashboard
+curl -s -H "Authorization: Bearer $DASHBOARD_SECRET" https://6a69f224e6032a3f00de977f.nanoclaw.aimarkets.vn/api/overview
+# Expect HTTP 200 JSON (not 503 "No data yet"). Dashboard-only mode seeds an empty snapshot on boot.
+```
+
+API phải cùng secret:
+
+```env
+NANOCLAW_DASHBOARD_SECRET=<cùng DASHBOARD_SECRET trên container NanoClaw>
+NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn
 ```
 
 ---
