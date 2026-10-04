@@ -21,6 +21,8 @@ const envConfig = readEnvFile([
   'NANOCLAW_EGRESS_LOCKDOWN',
   'NANOCLAW_EGRESS_NETWORK',
   'ONECLI_GATEWAY_CONTAINER',
+  'PONYTAIL_URL',
+  'PONYTAIL_MODE',
 ]);
 
 /**
@@ -47,6 +49,11 @@ export const DEFAULT_AGENT_PROVIDER = (
 // at spawn rather than stamped at creation, so changing it takes effect on the
 // next container start for every group that has not set one.
 export const DEFAULT_MODEL = process.env.NANOCLAW_DEFAULT_MODEL || envConfig.NANOCLAW_DEFAULT_MODEL || '';
+
+// Shared Ponytail coding ruleset (see src/ponytail.ts). Unset URL or mode
+// `off` composes CLAUDE.md exactly as before.
+export const PONYTAIL_URL = process.env.PONYTAIL_URL || envConfig.PONYTAIL_URL || '';
+export const PONYTAIL_MODE = process.env.PONYTAIL_MODE || envConfig.PONYTAIL_MODE || 'compact';
 
 // Fast serving tier for every agent container: faster output at a higher
 // per-token price. Off unless explicitly turned on, and only by '1' or 'true' —

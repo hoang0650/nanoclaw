@@ -23,6 +23,7 @@ import { parseSkillSelection, sanitizeStoredMcpServers } from './container-confi
 import { getContainerConfig } from './db/container-configs.js';
 import { readGroupPersona } from './group-persona.js';
 import { log } from './log.js';
+import { getPonytailRules } from './ponytail.js';
 import type { AgentGroup } from './types.js';
 
 /** One `# <name>` block of the composed document. */
@@ -130,6 +131,8 @@ export async function composeGroupProjectDoc(group: AgentGroup, groupDir: string
   }
 
   for (const extra of spec.extraSections ?? []) push(extra.name, extra.body);
+
+  push('Ponytail Coding Rules', await getPonytailRules());
 
   // Module instructions — every MCP/CLI module shipping a sibling
   // `<name>.instructions.md`, describing how to use that module's tools.
