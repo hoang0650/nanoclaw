@@ -16,8 +16,12 @@ services:
       DASHBOARD_SECRET: ${DASHBOARD_SECRET:?set DASHBOARD_SECRET}
       PONYTAIL_URL: ${PONYTAIL_URL:-}
       PONYTAIL_MODE: ${PONYTAIL_MODE:-compact}
+      NANOCLAW_INSTALL_ID: aimarkets
+      # Same path on the VPS and in the container: agents are spawned by the host daemon.
+      NANOCLAW_RUNTIME_ROOT: /opt/nanoclaw-aimarkets
     volumes:
       - nanoclaw-data:/app/data
+      - /opt/nanoclaw-aimarkets:/opt/nanoclaw-aimarkets
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 

@@ -103,9 +103,25 @@ Hoặc Compose: `deploy/docker-compose.aimarkets-level2.yml` (Dokploy Compose mo
 | Host | Container | Mục đích |
 |------|-----------|----------|
 | `/var/run/docker.sock` | `/var/run/docker.sock` | Spawn agent |
-| volume `nanoclaw-data` | `/app/data` | SQLite + groups + ncl.sock |
+| bind `/opt/nanoclaw-aimarkets` | `/opt/nanoclaw-aimarkets` (**cùng đường dẫn**) | Runtime root: data, groups, store, logs + bản code cho agent mount |
+| volume `nanoclaw-data` | `/app/data` | Dữ liệu cũ — entrypoint tự chuyển sang runtime root lần đầu, giữ lại để rollback |
+
+Env bắt buộc: `NANOCLAW_RUNTIME_ROOT=/opt/nanoclaw-aimarkets`, `NANOCLAW_INSTALL_ID=aimarkets`.
 
 Dokploy UI → Volumes / Mounts. Sock thường là bind mount kiểu file.
+
+**Vì sao phải cùng đường dẫn:** agent container do Docker daemon của VPS tạo qua `docker.sock`, nên nguồn bind mount (`groups/<folder>`, `data/v2-sessions/…`, `container/agent-runner/src`, `container/skills`) được tìm trên VPS chứ không phải trong container host. Entrypoint chép code từ image sang runtime root mỗi lần start, chạy host từ đó bằng uid 1000 (khớp user `node` của agent image, thêm nhóm của `docker.sock`).
+
+**Build qua GitHub Actions** (giống openclaw/paperclip/spacebot): `.github/workflows/docker-dokploy.yml` build trên runner và đẩy lên GHCR mỗi lần push `main`:
+
+| Image | Nguồn | Dùng ở |
+|--|--|--|
+| `ghcr.io/hoang0650/nanoclaw-aimarkets:latest` | `deploy/Dockerfile.level2` | Dokploy service (Provider: Docker image) |
+| `ghcr.io/hoang0650/nanoclaw-agent-aimarkets:sha-<commit>` | `container/Dockerfile` | Host tự pull qua `docker.sock` |
+
+Dokploy: đổi service sang **Docker image** `ghcr.io/hoang0650/nanoclaw-aimarkets:latest` (registry GHCR như các service kia), bật webhook redeploy và lưu URL vào secret `DOKPLOY_WEBHOOK_URL` của repo. Package `nanoclaw-agent-aimarkets` nên để **Public** trên GitHub (không chứa secret) vì docker CLI trong container host không có đăng nhập GHCR.
+
+**Agent image:** host image mang sẵn `NANOCLAW_AGENT_IMAGE_REF` (image agent cùng commit). Entrypoint pull + tag thành `nanoclaw-agent-v2-aimarkets:latest` khi start và mỗi khi tag bị dọn (kiểm tra mỗi 10 phút); pull lỗi thì tự build trên VPS (`container/build.sh build`, BuildKit qua `docker-buildx-plugin`). Tắt: `NANOCLAW_AGENT_IMAGE_AUTOBUILD=0`; đổi chu kỳ: `NANOCLAW_AGENT_IMAGE_CHECK_SECONDS`.
 
 ### Tripwire (Docker image)
 
