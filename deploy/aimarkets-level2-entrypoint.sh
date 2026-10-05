@@ -6,4 +6,6 @@ set -eu
 cd /app
 mkdir -p /app/data
 node --input-type=module -e "import { writeUpgradeState } from './dist/upgrade-state.js'; writeUpgradeState({ via: 'aimarkets-level2' });"
+# Public edge (Traefik → :3200): /login sets the cookie, dashboard + API stay behind it.
+. /app/deploy/aimarkets-proxy/start-background.sh
 exec node dist/index.js

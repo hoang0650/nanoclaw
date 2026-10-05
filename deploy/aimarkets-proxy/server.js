@@ -9,6 +9,7 @@
  *   DASHBOARD_SECRET=<same as NanoClaw DASHBOARD_SECRET / API NANOCLAW_DASHBOARD_SECRET>
  *   COOKIE_NAME=nc_aimarkets_token
  */
+const crypto = require('crypto');
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
@@ -35,8 +36,28 @@ function parseCookies(header) {
   return out;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Same-origin path only — `//host` and `/\host` are treated as external by browsers. */
+function safeNextPath(value) {
+  const next = String(value || '');
+  return next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/dashboard';
+}
+
+function tokenMatches(token) {
+  const a = Buffer.from(String(token));
+  const b = Buffer.from(EXPECTED);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 function loginPage({ token, nextPath, error }) {
-  const safeNext = nextPath || '/dashboard';
+  const safeNext = safeNextPath(nextPath);
   const safeToken = token || '';
   return `<!doctype html>
 <html lang="en">
@@ -68,8 +89,8 @@ function loginPage({ token, nextPath, error }) {
     <p>AI Markets dashboard — sign in with your Launch token.</p>
     ${error ? `<p class="err">${error}</p>` : ''}
     <label for="token">Dashboard token</label>
-    <input id="token" name="token" type="password" autocomplete="current-password" value="${safeToken.replace(/"/g, '&quot;')}" required />
-    <input type="hidden" name="next" value="${safeNext.replace(/"/g, '&quot;')}" />
+    <input id="token" name="token" type="password" autocomplete="current-password" value="${escapeHtml(safeToken)}" required />
+    <input type="hidden" name="next" value="${escapeHtml(safeNext)}" />
     <button type="submit">Continue</button>
   </form>
   <script>
@@ -126,7 +147,9 @@ function proxy(req, res, token) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const cookies = parseCookies(req.headers.cookie);
-  const cookieToken = String(cookies[COOKIE] || '').trim();
+  const rawCookieToken = String(cookies[COOKIE] || '').trim();
+  // Dashboard HTML embeds the secret, so a cookie only counts when it matches.
+  const cookieToken = rawCookieToken && (!EXPECTED || tokenMatches(rawCookieToken)) ? rawCookieToken : '';
 
   if (url.pathname === '/login' && req.method === 'GET') {
     const token = String(url.searchParams.get('token') || '');
@@ -146,14 +169,14 @@ const server = http.createServer(async (req, res) => {
       res.end(loginPage({ token: '', nextPath, error: 'Token is required.' }));
       return;
     }
-    if (EXPECTED && token !== EXPECTED) {
+    if (EXPECTED && !tokenMatches(token)) {
       res.writeHead(401, { 'content-type': 'text/html; charset=utf-8' });
       res.end(loginPage({ token: '', nextPath, error: 'Invalid dashboard token.' }));
       return;
     }
     const secure = String(req.headers['x-forwarded-proto'] || '').includes('https') || false;
     res.writeHead(302, {
-      location: nextPath.startsWith('/') ? nextPath : '/dashboard',
+      location: safeNextPath(nextPath),
       'set-cookie': `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`,
     });
     res.end();

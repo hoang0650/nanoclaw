@@ -32,5 +32,6 @@ RUN pnpm rebuild better-sqlite3 || true
 COPY deploy/aimarkets-level2-entrypoint.sh /usr/local/bin/aimarkets-level2-entrypoint.sh
 RUN chmod +x /usr/local/bin/aimarkets-level2-entrypoint.sh
 VOLUME ["/app/data"]
-EXPOSE 3100 3000
+# 3200 = public login proxy (Traefik upstream); 3100 dashboard stays internal
+EXPOSE 3200 3100 3000
 CMD ["tini", "--", "/usr/local/bin/aimarkets-level2-entrypoint.sh"]

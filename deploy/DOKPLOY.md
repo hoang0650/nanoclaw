@@ -98,21 +98,20 @@ Chi tiết deploy, sock mount, agent image, phase 2b/2c: **[DOKPLOY-LEVEL2.md](.
 
 ---
 
-## aimarkets-proxy (tuỳ chọn)
+## aimarkets-proxy (đã gộp trong image)
 
-Chỉ khi cần `/login?token&autoLogin` → cookie Bearer:
+Dashboard `@nanoco/nanoclaw-dashboard` trả HTML có nhúng `DASHBOARD_SECRET` mà không kiểm tra đăng nhập, nên **không** được public `:3100`. Cả hai entrypoint (mức 1 và mức 2) tự chạy `deploy/aimarkets-proxy` trên **:3200** (upstream `127.0.0.1:3100`):
 
-1. Deploy `deploy/aimarkets-proxy` (port **3200**)
-2. Env: `DASHBOARD_UPSTREAM=http://<nanoclaw-service>:3100`, `DASHBOARD_SECRET=…`
-3. Đổi Traefik upstream sang `:3200`
-4. API: `NANOCLAW_USE_LOGIN_PROXY=1`
+1. Traefik upstream → `http://<nanoclaw-service>:3200` (xem `dokploy-dynamic-nanoclaw-aimarkets-wildcard.yml`)
+2. API: `NANOCLAW_USE_LOGIN_PROXY=1` → Launch mở `/login?token&autoLogin&next=/dashboard…`, proxy đặt cookie rồi chuyển vào dashboard
+3. Đổi port bằng `AIMARKETS_PROXY_PORT`; tắt bằng `AIMARKETS_PROXY_DISABLE=1` (chỉ khi có proxy khác phía trước)
 
 ---
 
 ## Checklist nhanh
 
 1. [x] Dokploy NanoClaw · port 3100 · `DASHBOARD_SECRET`  
-2. [x] Traefik `nanoclaw.aimarkets.vn` + `*.nanoclaw.aimarkets.vn` → `:3100`  
+2. [x] Traefik `nanoclaw.aimarkets.vn` + `*.nanoclaw.aimarkets.vn` → `:3200` (login proxy)  
 3. [x] API `NANOCLAW_AIMARKETS_PUBLIC_URL_TEMPLATE=https://{userId}.nanoclaw.aimarkets.vn`  
 4. [ ] Launch Nano Claw trên marketplace (mức 1 OK)  
 5. [ ] Mức 2 (optional): [DOKPLOY-LEVEL2.md](./DOKPLOY-LEVEL2.md) — sock + `Dockerfile.level2`  

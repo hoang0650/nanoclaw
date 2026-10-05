@@ -8,4 +8,4 @@ proxvn --server <PROXVN_HOST>:8882 --proto http 3100 --id nanoclaw-aimarkets
 
 See `../DOKPLOY-AIMARKETS.md`.
 
-This folder remains an **optional** Bearer login bridge (`/login` → cookie → `Authorization` upstream). If you use it, expose **this** port behind ProxVN and set `NANOCLAW_USE_LOGIN_PROXY=1` on the marketplace API.
+This folder is the Bearer login bridge (`/login` → cookie → `Authorization` upstream). Both Aimarkets entrypoints start it on **:3200** via `start-background.sh`; point Traefik at that port (never at the dashboard's :3100, whose HTML embeds `DASHBOARD_SECRET`) and set `NANOCLAW_USE_LOGIN_PROXY=1` on the marketplace API.

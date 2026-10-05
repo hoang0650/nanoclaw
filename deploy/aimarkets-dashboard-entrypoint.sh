@@ -14,6 +14,9 @@ seed() {
     "http://127.0.0.1:${PORT}/api/ingest" 2>/dev/null || true
 }
 
+# Public edge (Traefik → :3200): /login sets the cookie, dashboard + API stay behind it.
+. /app/deploy/aimarkets-proxy/start-background.sh
+
 # Start dashboard in background then seed once it is up
 npx --yes @nanoco/nanoclaw-dashboard &
 PID=$!

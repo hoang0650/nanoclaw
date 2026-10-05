@@ -47,5 +47,6 @@ http:
     nanoclaw-aimarkets-svc:
       loadBalancer:
         servers:
-          - url: "http://aimarketplace-nanoclaw-hsnvyh:3100"
+          # Login proxy bundled in the image; :3100 serves the dashboard without auth.
+          - url: "http://aimarketplace-nanoclaw-hsnvyh:3200"
         passHostHeader: true

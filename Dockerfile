@@ -24,6 +24,7 @@ COPY --from=build /app /app
 RUN pnpm rebuild better-sqlite3 || true
 COPY deploy/aimarkets-dashboard-entrypoint.sh /usr/local/bin/aimarkets-dashboard-entrypoint.sh
 RUN chmod +x /usr/local/bin/aimarkets-dashboard-entrypoint.sh
-EXPOSE 3100 3000
+# 3200 = public login proxy (Traefik upstream); 3100 dashboard stays internal
+EXPOSE 3200 3100 3000
 # Aimarkets Launch: dashboard + empty snapshot seed (avoids Overview 503 "No data yet")
 CMD ["tini", "--", "/usr/local/bin/aimarkets-dashboard-entrypoint.sh"]
