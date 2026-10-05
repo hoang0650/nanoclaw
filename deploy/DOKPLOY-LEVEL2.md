@@ -150,7 +150,17 @@ OPENROUTER_API_KEY=sk-or-v1-…
 # OPENCODE_SMALL_MODEL=featherless/<model-id>
 # ANTHROPIC_BASE_URL=https://api.featherless.ai/v1
 # FEATHERLESS_API_KEY=…
+
+# --- BYOK: buyer tự nhập key trên aimarkets.vn ---
+AIMARKETS_API_URL=https://api.aimarkets.vn
+AIMARKETS_SERVICE_SECRET=<cùng giá trị với ai-marketplace-api>
 ```
+
+### BYOK — buyer tự cấu hình provider
+
+Buyer vào **aimarkets.vn → Agents → NanoClaw → AI provider**, lưu API key (dùng chung kho key BYOK với OpenClaw/Builder, mã hoá trong DB), chọn provider + model. Khi spawn container cho group `market-{userId}`, host gọi `GET $AIMARKETS_API_URL/v1/nanoclaw/provider/resolve?user_id=…` (header `X-Service-Secret`, cache 30 s) và thay `OPENCODE_PROVIDER/MODEL/SMALL_MODEL`, `ANTHROPIC_BASE_URL` + file `api-key` bằng kết nối OpenAI-compatible của buyer. Không có lựa chọn, thiếu env, hoặc API lỗi → dùng model mặc định ở trên.
+
+Áp dụng khi container của group khởi động lại (container đang chạy giữ env cũ đến khi idle/thoát). Group phải dùng provider `opencode`.
 
 NanoClaw **một group = một upstream** (không có fallback OpenRouter→Featherless như Hermes). Đổi provider bằng env + `ncl groups config update --provider opencode` + restart group.
 

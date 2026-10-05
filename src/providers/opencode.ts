@@ -11,10 +11,13 @@
  * Aimarkets (NANOCLAW_GATEWAY_PROVIDER=none): host writes the upstream API
  * key into a session file (not container env — driver forbids credential
  * values in -e). Container OpenCode reads OPENCODE_API_KEY_FILE.
+ * A buyer BYOK selection (see aimarkets-byok.ts) replaces provider, model,
+ * base URL and key for that buyer's `market-<userId>` group.
  */
 import fs from 'fs';
 import path from 'path';
 
+import { resolveAimarketsByok } from '../aimarkets-byok.js';
 import { readEnvFile } from '../env.js';
 import { registerProviderContainerConfig } from './provider-container-registry.js';
 
@@ -69,7 +72,7 @@ function defaultBaseUrl(provider: string): string | undefined {
   return undefined;
 }
 
-registerProviderContainerConfig('opencode', (ctx) => {
+registerProviderContainerConfig('opencode', async (ctx) => {
   const opencodeDir = path.join(ctx.sessionDir, 'opencode-xdg');
   fs.mkdirSync(opencodeDir, { recursive: true });
 
@@ -95,7 +98,21 @@ registerProviderContainerConfig('opencode', (ctx) => {
     if (fallback) env.ANTHROPIC_BASE_URL = fallback;
   }
 
-  const upstreamKey = pickUpstreamKey(ctx.hostEnv, dotenv, provider);
+  let upstreamKey = pickUpstreamKey(ctx.hostEnv, dotenv, provider);
+
+  const byok = await resolveAimarketsByok(ctx.groupDir, ctx.hostEnv);
+  if (byok) {
+    // Limits/modalities describe the operator's default model, not the buyer's.
+    delete env.OPENCODE_MODEL_CONTEXT_LIMIT;
+    delete env.OPENCODE_MODEL_OUTPUT_LIMIT;
+    delete env.OPENCODE_MODEL_INPUT_MODALITIES;
+    env.OPENCODE_PROVIDER = 'openai';
+    env.OPENCODE_MODEL = `openai/${byok.model}`;
+    env.OPENCODE_SMALL_MODEL = `openai/${byok.model}`;
+    env.ANTHROPIC_BASE_URL = byok.baseUrl;
+    upstreamKey = byok.apiKey;
+  }
+
   if (upstreamKey) {
     const keyPath = path.join(opencodeDir, 'api-key');
     fs.writeFileSync(keyPath, `${upstreamKey}\n`, { mode: 0o600 });

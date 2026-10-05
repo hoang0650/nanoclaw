@@ -16,6 +16,9 @@ services:
       DASHBOARD_SECRET: ${DASHBOARD_SECRET:?set DASHBOARD_SECRET}
       PONYTAIL_URL: ${PONYTAIL_URL:-}
       PONYTAIL_MODE: ${PONYTAIL_MODE:-compact}
+      # Buyer BYOK provider (aimarkets.vn → Agents → NanoClaw → AI provider).
+      AIMARKETS_API_URL: ${AIMARKETS_API_URL:-https://api.aimarkets.vn}
+      AIMARKETS_SERVICE_SECRET: ${AIMARKETS_SERVICE_SECRET:-}
       NANOCLAW_INSTALL_ID: aimarkets
       # Same path on the VPS and in the container: agents are spawned by the host daemon.
       NANOCLAW_RUNTIME_ROOT: /opt/nanoclaw-aimarkets
