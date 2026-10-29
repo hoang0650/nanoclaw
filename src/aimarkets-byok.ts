@@ -62,13 +62,17 @@ export async function resolveAimarketsByok(
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const body = (await res.json()) as { connection?: unknown };
+    const body = (await res.json()) as { userId?: string; connection?: unknown };
+    if (body.userId !== userId) throw new Error('BYOK owner mismatch');
     const value = parseConnection(body.connection);
+    for (const [id, item] of cache) if (Date.now() - item.at >= CACHE_TTL_MS) cache.delete(id);
+    if (cache.size >= 500) cache.delete(cache.keys().next().value!);
     cache.set(userId, { at: Date.now(), value });
     return value;
   } catch (err) {
-    log.warn('AI Markets BYOK resolve failed; using default model', { userId, err: String(err) });
-    return cached?.value ?? null;
+    cache.delete(userId);
+    log.warn('AI Markets BYOK resolve failed; refusing stale credentials', { userId });
+    throw new Error('Buyer key store unavailable; retry later');
   }
 }
 
