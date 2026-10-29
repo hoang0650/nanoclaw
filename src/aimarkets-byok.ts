@@ -5,6 +5,7 @@
  * Enabled only when AIMARKETS_API_URL and AIMARKETS_SERVICE_SECRET are set.
  */
 import path from 'path';
+import { createHash } from 'node:crypto';
 
 import { readEnvFile } from './env.js';
 import { log } from './log.js';
@@ -50,9 +51,10 @@ export async function resolveAimarketsByok(
   const userId = marketUserIdFromGroupDir(groupDir);
   if (!userId) return null;
   const config = readConfig(hostEnv);
-  if (!config) return null;
+  if (!config) throw new Error('Buyer key store unavailable; configure BYOK before running');
+  const cacheKey = createHash('sha256').update(JSON.stringify([config.apiUrl, config.secret, userId])).digest('hex');
 
-  const cached = cache.get(userId);
+  const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.value;
 
   try {
@@ -65,12 +67,13 @@ export async function resolveAimarketsByok(
     const body = (await res.json()) as { userId?: string; connection?: unknown };
     if (body.userId !== userId) throw new Error('BYOK owner mismatch');
     const value = parseConnection(body.connection);
+    if (!value) throw new Error('Buyer credentials are missing');
     for (const [id, item] of cache) if (Date.now() - item.at >= CACHE_TTL_MS) cache.delete(id);
     if (cache.size >= 500) cache.delete(cache.keys().next().value!);
-    cache.set(userId, { at: Date.now(), value });
+    cache.set(cacheKey, { at: Date.now(), value });
     return value;
   } catch (err) {
-    cache.delete(userId);
+    cache.delete(cacheKey);
     log.warn('AI Markets BYOK resolve failed; refusing stale credentials', { userId });
     throw new Error('Buyer key store unavailable; retry later');
   }
